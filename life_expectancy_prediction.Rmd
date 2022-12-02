@@ -1,0 +1,323 @@
+---
+title: "Life Expectancy Prediction"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Libraries
+```{r}
+library(car)
+library(olsrr)
+```
+
+## Load Dataset
+
+```{r}
+life = read.csv('Life Expectancy Data.csv')
+```
+
+The Life Expectancy Dataset contains the following fields:
+
++ `Country` - Country Observed.
++ `Year` - Year Observed.
++ `Status` - Developed or Developing status.
++ `Life.expectancy` - Life Expectancy in age.
++ `Adult.Mortality` - Adult Mortality Rates on both sexes (probability of dying between 15-60 years/1000 population).
++ `infant.deaths` - Number of Infant Deaths per 1000 population.
++ `Alcohol` - Alcohol recorded per capita (15+) consumption (in litres of pure alcohol).
++ `percentage.expenditure` - Expenditure on health as a percentage of Gross Domestic Product per capita (%).
++ `Hepatitis.B` - Hepatitis B (HepB) immunization coverage among 1-year-olds (%).
++ `Measles` - Number of reported Measles cases per 1000 population.
++ `BMI` - Average Body Mass Index of entire population.
++ `under.five.deaths` - Number of under-five deaths per 1000 population.
++ `Polio` - Polio (Pol3) immunization coverage among 1-year-olds (%).
++ `Total expenditure` - General government expenditure on health as a percentage of total government expenditure (%).
++ `Diphtheria` - Diphtheria tetanus toxoid and pertussis (DTP3) immunization coverage among 1-year-olds (%).
++ `HIV.AIDS` - Deaths per 1000 live births HIV/AIDS (0-4 years).
++ `GDP` - Gross Domestic Product per capita (in USD).
++ `Population` - Population of the country.
++ `thinness..1.19.years` - Prevalence of thinness among children and adolescents for Age 10 to 19 (%).
++ `thinness.5.9.years` - Prevalence of thinness among children for Age 5 to 9 (%).
++ `Income.composition.of.resources` - Human Development Index in terms of income composition of resources (index ranging from 0 to 1).
++ `Schooling` - Number of years of Schooling (years).
+
+In total, there are 22 variables with 20 of them being numerical and 2 categorical.\
+We will predict the `Life.expectancy` using the given dependent variables in the dataset.
+
+## Clean Data
+
+```{r}
+life = na.omit(life)
+```
+
+## Data Exploration
+
+```{r}
+summary(life)
+```
+
+```{r}
+boxplot(life$Year, main='Year', ylab='Year')
+```
+
+```{r}
+boxplot(life$Life.expectancy, main='Life Expectancy', ylab='Age')
+```
+
+```{r}
+boxplot(life$Adult.Mortality, main='Probability of Dying Between 15-60 years/1000 Population', ylab='Adult Mortality Rates on Both Sexes')
+```
+
+```{r}
+boxplot(life$infant.deaths, main='Number of Infant Deaths per 1000 Population', ylab='Infant Deaths')
+```
+
+```{r}
+boxplot(life$Alcohol, main='Alcohol Recorded per Capita (15+) Consumption', ylab='Litres of Pure Alcohol')
+```
+
+```{r}
+boxplot(life$percentage.expenditure, main='Health Expenditure', ylab='Percentage of Gross Domestic Product per Capita')
+```
+
+```{r}
+boxplot(life$Hepatitis.B, main='Hepatitis B (HepB) Immunization Coverage Among 1-Year-Olds', ylab='Percentage')
+```
+
+```{r}
+boxplot(life$Measles, main='Reported Measles Cases per 1000 Population.')
+```
+
+```{r}
+boxplot(life$BMI, main='Average Body Mass Index of Entire Population', ylab='Body Mass Index')
+```
+
+```{r}
+boxplot(life$under.five.deaths, main='Under-Five Deaths per 1000 Population.')
+```
+
+```{r}
+boxplot(life$Polio, main='Polio (Pol3) Immunization Coverage Among 1-Year-Olds', ylab='Percentage')
+```
+
+```{r}
+boxplot(life$Total.expenditure, main='General Government Health Expenditure as a Percentage of Total Government Expenditure', ylab='Percentage')
+```
+
+```{r}
+boxplot(life$Diphtheria, main='DTP3 Immunization Coverage Among 1-Year-Olds', ylab='Percentage')
+```
+
+```{r}
+boxplot(life$HIV.AIDS, main='Deaths per 1000 Live Births HIV/AIDS (0-4 Years)', ylab='Deaths')
+```
+
+```{r}
+boxplot(life$GDP, main='Gross Domestic Product per Capita (in USD)')
+```
+
+```{r}
+boxplot(life$Population, main='Country Population')
+```
+
+```{r}
+boxplot(life$thinness..1.19.years, main='Prevalence of Thinness (10-19 Years)', ylab='Percentage')
+```
+
+```{r}
+boxplot(life$thinness.5.9.years, main='Prevalence of Thinness (5-9 Years)', ylab='Percentage')
+```
+
+```{r}
+boxplot(life$Income.composition.of.resources, main='HDI in Terms of Income Composition of Resources (0-1)')
+```
+
+```{r}
+boxplot(life$Schooling, main='Number of Years of Schooling', ylab='Years')
+```
+
+## Feature Selection
+
+We will be removing some of the variables for building the model due to the reasons mentioned below:\
+`Country` - Contains too many levels with no additional information to predict `Life.expectancy`.\
+`Year` - Contains time series data with no additional information to predict `Life.expectancy`.
+
+```{r}
+life = life[, !(names(life) %in% c('Country', 'Year'))]
+```
+
+We will be mutating `Hepatitis.B`, `Polio` and `Diphteria` for building the model since their range between the minimum value and the 1st Quartile is too wide.
+
+```{r}
+life$Hepatitis.B = ifelse(life$Hepatitis.B < 90, '90% Covered', '>=90% Covered')
+life$Polio = ifelse(life$Polio < 90, '90% Covered', '>=90% Covered')
+life$Diphtheria = ifelse(life$Diphtheria < 90, '90% Covered', '>=90% Covered')
+```
+
+```{r}
+summary(life)
+```
+
+## Correlations and Variances
+
+```{r}
+life_nums = unlist(lapply(life, is.numeric), use.names = FALSE)  
+cor(life[, life_nums])
+```
+
+`Life.expectancy` has a somewhat strong positive correlation with `Income.composition.of.resources` and `Schooling`.\
+`Life.expectancy` has a negative correlation with `Adult.Mortality`, which makes sense since if the mortality rate of adult is high, then obviously life expectancy will be low.\
+`Life.expectancy` has a very weak correlation with `Measles` and `Population`.
+
+There is a very strong correlation between `infant.deaths` and `under.five.deaths`, indicating multicollinearity between them. Therefore, we will remove `under.five.deaths` for building the model.
+
+```{r}
+life = life[, !(names(life) %in% c('under.five.deaths'))]
+```
+
+## Model Building
+
+Build Linear Regression Model using all the remaining variables.
+
+```{r}
+lmod = lm(Life.expectancy~., data=life)
+summary(lmod)
+```
+
+The p-value of the model is <0.05, indicating that it is significant.\
+From the model we can interpret that `StatusDeveloping`, `Adult.Mortality`, `infant.deaths`, `Alcohol`, `HIV.AIDS`, and `thinness..1.19.years`  may have a negative effect on life expectancy.\
+From the model we can interpret that `Income.composition.of.resources` has a strong positive effect on life expectancy.\
+A peculiar result we can interpret from the model is that `Hepatitis.B90% Covered` and `Schooling` also have a negative effect on life expectancy.\
+The Adj R-squared value of the model is 0.8244, indicating that about 82.44% of the observed variation can be explained by the variables in the model, which is quite a good result and can be improved even further with model selection.
+`Adult.Mortality`, `Alcohol`, `BMI`, `HIV.AIDS`, `Income.composition.of.resources` and `Schooling` are the most significant variables with p-value < 0.5.
+
+## Model Selection
+
+Build Model using Forward Selection Method.
+
+```{r}
+ols_step_forward_p(lmod)
+```
+
+Build Model using Backward Elimination Method.
+
+```{r}
+lmod_backward = ols_step_backward_p(lmod)
+lmod_backward
+```
+
+Build Model using Stepwise Selection Method.
+
+```{r}
+lmod_stepwise = ols_step_both_p(lmod)
+lmod_stepwise
+```
+
+Build Model using All Possible Regressions Method.
+
+```{r}
+#ols_step_all_possible(lmod, sbc = TRUE)
+```
+
+Model chosen by Forward Selection Method: `Schooling`, `HIV.AIDS`, `Adult.Mortality`, `Income.composition.of.resources`, `percentage.expenditure`, `BMI`, `Diphtheria`, `Alcohol`, `thinness..1.19.years`, `Status`, `Hepatitis.B`, `Total.expenditure`, `infant.deaths`, `Measles`, `Population`, `Polio`.\
+Model chosen by Backward Elimination Method: `StatusDeveloping`, `Adult.Mortality`, `infant.deaths`, `Alcohol`, `percentage.expenditure`, `HepatitisB90% Covered`, `Measles`, `BMI`, `Polio90% Covered`, `Total.expenditure`, `Diphtheria90% Covered`, `HIV.AIDS`, `Population`, `thinness..1.19.years`, `Income.composition.of.resources`, `Schooling`.\
+Model chosen by Stepwise Selection Method: `Schooling`, `HIV.AIDS`, `Adult.Mortality`, `Income.compsition.resources`, `percentage.expenditure`, `BMI`, `Diphtheria`, `Alcohol`, `thinness..1.19.years`, `Status`, `Hepatitis.B`.
+
+```{r}
+lmod_forward = lm(
+  Life.expectancy ~  Schooling + HIV.AIDS + Adult.Mortality + Income.composition.of.resources + percentage.expenditure +
+    BMI + Diphtheria + Alcohol + thinness..1.19.years + Status + Hepatitis.B +
+    Total.expenditure + infant.deaths + Measles + Population + Polio,
+  data = life
+)
+summary(lmod_forward)
+```
+
+
+```{r}
+lmod_backward = lm(
+  Life.expectancy ~ Status + Adult.Mortality + infant.deaths + Alcohol +
+    percentage.expenditure + Hepatitis.B + Measles + BMI + Polio + Total.expenditure +
+    Diphtheria + HIV.AIDS + Population + thinness..1.19.years + Income.composition.of.resources +
+    Schooling,
+  data = life
+)
+summary(lmod_backward)
+```
+
+
+```{r}
+lmod_stepwise = lm(
+  Life.expectancy ~ Schooling + HIV.AIDS + Adult.Mortality + Income.composition.of.resources +
+    percentage.expenditure + BMI + Diphtheria + Alcohol + thinness..1.19.years +
+    Status + Hepatitis.B,
+  data = life
+)
+summary(lmod_stepwise)
+```
+
+Adj. R-squared values of above models:
+
+```{r}
+data.frame(
+  model = c('lmod', 'lmod_forward', 'lmod_backward', 'lmod_stepwise'),
+  AdjRsquare = c(
+    summary(lmod)$adj.r.square,
+    summary(lmod_forward)$adj.r.square,
+    summary(lmod_backward)$adj.r.square,
+    summary(lmod_stepwise)$adj.r.square
+  )
+)
+```
+
+We will be choosing the model chosen by Forward Selection method `lmod_forward` as it has the highest Adj. R-squared value. 
+
+```{r}
+lmod_final = lmod_forward
+summary(lmod_final)
+```
+
+## Model Error Estimation
+
+```{r}
+result = predict(lmod_final, life)
+```
+
+Mean Squared Error: 
+```{r}
+mse = mean((life$Life.expectancy - result)^2)
+mse
+```
+
+Root Mean Squared Error:
+```{r}
+rmse = sqrt(mse)
+rmse
+```
+
+## Model Adequacy Checking
+
+Normality Testing:
+
+```{r}
+hist(lmod_final$residuals, breaks = 20)
+```
+
+Most of the residuals seem to be distributed in the center, indicating that they are distributed normally.
+
+
+```{r}
+plot(lmod_final, which = c(1:6))
+```
+
+Multicollinearity Test:
+
+```{r}
+vif(lmod_final)
+```
+
+A VIF > 10 implies serious problems with multicollinearity.\
+Since the VIF for all of the predictors is less than 10, there seems to be no issue with multicollinearity.
