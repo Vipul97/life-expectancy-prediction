@@ -7,8 +7,14 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+The goal of this project is to build a Linear Regression model that can predict the life expectancy of the human population based on several factors such as the amount of alcohol consumption, average Body Mass Index (BMI), immunization of various vaccines among 1-year-olds such as Hepatitis B, Polio, and Diphtheria vaccines, and more, and also derive insights into what factors are significant in determining a higher or lower life expectancy of the human population.
+
+The dataset contains data of each country recorded during the years between 2000 and 2015.\
+The dataset is available at https://www.kaggle.com/datasets/kumarajarshi/life-expectancy-who.
+
 ## Load Libraries
 ```{r}
+library(corrplot)
 library(car)
 library(olsrr)
 ```
@@ -34,7 +40,7 @@ The Life Expectancy Dataset contains the following fields:
 + `BMI` - Average Body Mass Index of entire population.
 + `under.five.deaths` - Number of under-five deaths per 1000 population.
 + `Polio` - Polio (Pol3) immunization coverage among 1-year-olds (%).
-+ `Total expenditure` - General government expenditure on health as a percentage of total government expenditure (%).
++ `Total.expenditure` - General government expenditure on health as a percentage of total government expenditure (%).
 + `Diphtheria` - Diphtheria tetanus toxoid and pertussis (DTP3) immunization coverage among 1-year-olds (%).
 + `HIV.AIDS` - Deaths per 1000 live births HIV/AIDS (0-4 years).
 + `GDP` - Gross Domestic Product per capita (in USD).
@@ -44,14 +50,18 @@ The Life Expectancy Dataset contains the following fields:
 + `Income.composition.of.resources` - Human Development Index in terms of income composition of resources (index ranging from 0 to 1).
 + `Schooling` - Number of years of Schooling (years).
 
-In total, there are 22 variables with 20 of them being numerical and 2 categorical.\
-We will predict the `Life.expectancy` using the given dependent variables in the dataset.
+In total, there are 2938 observations of 22 variables with 20 of them being numerical and 2 categorical (`Country` and `Status`).\
+We will be using `Life.expectancy` to predict the life expectancy of the human population with the given dependent variables in the dataset.
 
 ## Clean Data
+
+We will drop any observation that does not contain any value in any of its columns.
 
 ```{r}
 life = na.omit(life)
 ```
+
+This shrinks our dataset to 1649 observations.
 
 ## Data Exploration
 
@@ -60,83 +70,50 @@ summary(life)
 ```
 
 ```{r}
-boxplot(life$Year, main='Year', ylab='Year')
+par(mfrow = c(2, 2))
+boxplot(life$Year, main = 'Year', ylab = 'Year')
+boxplot(life$Life.expectancy, main = 'Life Expectancy', ylab = 'Age')
+boxplot(life$Adult.Mortality, main = 'Adult Mortality Rate', ylab = 'Mortality Rates on Both Sexes')
+boxplot(life$infant.deaths, main = 'Infant Deaths', ylab = 'Deaths / 1000 Population')
+```
+
+
+```{r}
+par(mfrow = c(2, 2))
+boxplot(life$Alcohol, main = 'Alcohol Consumption', ylab = 'Litres')
+boxplot(life$percentage.expenditure,
+        main = 'Health Expenditure',
+        ylab = '% of GDP per Capita')
+boxplot(life$Hepatitis.B, main = 'Hepatitis B (HepB) Immunization', ylab =
+          '% Coverage Among 1-Year-Olds')
+boxplot(life$Measles, main = 'Measles', ylab = 'Reported Cases / 1000 Population')
 ```
 
 ```{r}
-boxplot(life$Life.expectancy, main='Life Expectancy', ylab='Age')
+par(mfrow = c(2, 2))
+boxplot(life$BMI, main = 'Average BMI', ylab = 'BMI')
+boxplot(life$under.five.deaths, main = 'Under-Five Deaths', ylab = 'Deaths / 1000 Population')
+boxplot(life$Polio, main = 'Polio (Pol3) Immunization', ylab = '% Coverage Among 1-Year-Olds')
+boxplot(life$Total.expenditure, main = 'General Government Health Expenditure', ylab =
+          '% of Total Government Expenditure')
 ```
 
 ```{r}
-boxplot(life$Adult.Mortality, main='Probability of Dying Between 15-60 years/1000 Population', ylab='Adult Mortality Rates on Both Sexes')
+par(mfrow = c(2, 2))
+boxplot(life$Diphtheria, main = 'DTP3 Immunization', ylab = '% Coverage Among 1-Year-Olds')
+boxplot(life$HIV.AIDS, main = 'HIV/AIDS (0-4 Years)', ylab = 'Deaths / 1000 Live Births')
+boxplot(life$GDP, main = 'GDP per Capita (in USD)')
+boxplot(life$Population, main = 'Country Population')
 ```
 
 ```{r}
-boxplot(life$infant.deaths, main='Number of Infant Deaths per 1000 Population', ylab='Infant Deaths')
-```
-
-```{r}
-boxplot(life$Alcohol, main='Alcohol Recorded per Capita (15+) Consumption', ylab='Litres of Pure Alcohol')
-```
-
-```{r}
-boxplot(life$percentage.expenditure, main='Health Expenditure', ylab='Percentage of Gross Domestic Product per Capita')
-```
-
-```{r}
-boxplot(life$Hepatitis.B, main='Hepatitis B (HepB) Immunization Coverage Among 1-Year-Olds', ylab='Percentage')
-```
-
-```{r}
-boxplot(life$Measles, main='Reported Measles Cases per 1000 Population.')
-```
-
-```{r}
-boxplot(life$BMI, main='Average Body Mass Index of Entire Population', ylab='Body Mass Index')
-```
-
-```{r}
-boxplot(life$under.five.deaths, main='Under-Five Deaths per 1000 Population.')
-```
-
-```{r}
-boxplot(life$Polio, main='Polio (Pol3) Immunization Coverage Among 1-Year-Olds', ylab='Percentage')
-```
-
-```{r}
-boxplot(life$Total.expenditure, main='General Government Health Expenditure as a Percentage of Total Government Expenditure', ylab='Percentage')
-```
-
-```{r}
-boxplot(life$Diphtheria, main='DTP3 Immunization Coverage Among 1-Year-Olds', ylab='Percentage')
-```
-
-```{r}
-boxplot(life$HIV.AIDS, main='Deaths per 1000 Live Births HIV/AIDS (0-4 Years)', ylab='Deaths')
-```
-
-```{r}
-boxplot(life$GDP, main='Gross Domestic Product per Capita (in USD)')
-```
-
-```{r}
-boxplot(life$Population, main='Country Population')
-```
-
-```{r}
-boxplot(life$thinness..1.19.years, main='Prevalence of Thinness (10-19 Years)', ylab='Percentage')
-```
-
-```{r}
-boxplot(life$thinness.5.9.years, main='Prevalence of Thinness (5-9 Years)', ylab='Percentage')
-```
-
-```{r}
-boxplot(life$Income.composition.of.resources, main='HDI in Terms of Income Composition of Resources (0-1)')
-```
-
-```{r}
-boxplot(life$Schooling, main='Number of Years of Schooling', ylab='Years')
+par(mfrow = c(2, 2))
+boxplot(life$thinness..1.19.years, main = 'Prevalence of Thinness (10-19 Years)', ylab =
+          '%')
+boxplot(life$thinness.5.9.years, main = 'Prevalence of Thinness (5-9 Years)', ylab =
+          '%')
+boxplot(life$Income.composition.of.resources, main = 'HDI')
+boxplot(life$Schooling, main = 'Schooling', ylab = 'Years')
 ```
 
 ## Feature Selection
@@ -149,30 +126,41 @@ We will be removing some of the variables for building the model due to the reas
 life = life[, !(names(life) %in% c('Country', 'Year'))]
 ```
 
-We will be mutating `Hepatitis.B`, `Polio` and `Diphteria` for building the model since their range between the minimum value and the 1st Quartile is too wide.
+We will be mutating `Hepatitis.B`, `Polio` and `Diphtheria` for building the model since their range between the minimum value and the 1st Quartile is too wide. We will be mutating their values into 2 categorical values: '<90% Covered' and '>=90% Covered'.
 
 ```{r}
-life$Hepatitis.B = ifelse(life$Hepatitis.B < 90, '90% Covered', '>=90% Covered')
-life$Polio = ifelse(life$Polio < 90, '90% Covered', '>=90% Covered')
-life$Diphtheria = ifelse(life$Diphtheria < 90, '90% Covered', '>=90% Covered')
+life$Hepatitis.B = ifelse(life$Hepatitis.B < 90, '<90% Covered', '>=90% Covered')
+life$Polio = ifelse(life$Polio < 90, '<90% Covered', '>=90% Covered')
+life$Diphtheria = ifelse(life$Diphtheria < 90, '<90% Covered', '>=90% Covered')
 ```
+
+This leaves us with 1649 observations of 20 variables with 16 of them being numerical and 4 categorical (`Status`, `Hepatitis.B`, `Polio` and `Diphtheria`).\
 
 ```{r}
 summary(life)
 ```
 
-## Correlations and Variances
+## Correlations
+
+Plot the correlation matrix of the dataset.
 
 ```{r}
-life_nums = unlist(lapply(life, is.numeric), use.names = FALSE)  
-cor(life[, life_nums])
+life_nums = unlist(lapply(life, is.numeric), use.names = FALSE)
+corrplot(
+  cor(life[, life_nums]),
+  method = 'number',
+  tl.cex = 0.5,
+  number.cex = 0.33,
+  cl.cex = 0.5
+)
 ```
 
-`Life.expectancy` has a somewhat strong positive correlation with `Income.composition.of.resources` and `Schooling`.\
-`Life.expectancy` has a negative correlation with `Adult.Mortality`, which makes sense since if the mortality rate of adult is high, then obviously life expectancy will be low.\
-`Life.expectancy` has a very weak correlation with `Measles` and `Population`.
+There are a few takeaways from this correlation plot:
 
-There is a very strong correlation between `infant.deaths` and `under.five.deaths`, indicating multicollinearity between them. Therefore, we will remove `under.five.deaths` for building the model.
+* `Life.expectancy` has a somewhat strong positive correlation with `Income.composition.of.resources` and `Schooling`.
+* `Life.expectancy` has a negative correlation with `Adult.Mortality`, which makes sense since if the mortality rate of adult is high, then obviously the life expectancy will be low.
+* `Life.expectancy` has a very weak correlation with `Measles` and `Population`.
+* There is a very strong correlation between `infant.deaths` and `under.five.deaths`, indicating multicollinearity between them. Therefore, we will remove `under.five.deaths` for building the model.
 
 ```{r}
 life = life[, !(names(life) %in% c('under.five.deaths'))]
@@ -180,51 +168,31 @@ life = life[, !(names(life) %in% c('under.five.deaths'))]
 
 ## Model Building
 
-Build Linear Regression Model using all the remaining variables.
+We will now build a Linear Regression Model using all the remaining variables to predict the life expectancy of the human population.
 
 ```{r}
-lmod = lm(Life.expectancy~., data=life)
+lmod = lm(Life.expectancy ~ ., data = life)
 summary(lmod)
 ```
 
-The p-value of the model is <0.05, indicating that it is significant.\
-From the model we can interpret that `StatusDeveloping`, `Adult.Mortality`, `infant.deaths`, `Alcohol`, `HIV.AIDS`, and `thinness..1.19.years`  may have a negative effect on life expectancy.\
-From the model we can interpret that `Income.composition.of.resources` has a strong positive effect on life expectancy.\
-A peculiar result we can interpret from the model is that `Hepatitis.B90% Covered` and `Schooling` also have a negative effect on life expectancy.\
-The Adj R-squared value of the model is 0.8244, indicating that about 82.44% of the observed variation can be explained by the variables in the model, which is quite a good result and can be improved even further with model selection.
-`Adult.Mortality`, `Alcohol`, `BMI`, `HIV.AIDS`, `Income.composition.of.resources` and `Schooling` are the most significant variables with p-value < 0.5.
+There are a few takeaways from this model:
+
+* The p-value of the model is 2.2e-16 < 0.05, indicating that it is significant.
+* The Adj R-squared value of the model is 0.8244, indicating that about 82.44% of the observed variation can be explained by the variables in the model, which is quite a good result and can possibly be improved even further with model selection.
+* `Adult.Mortality`, `Alcohol`, `BMI`, `HIV.AIDS`, `Income.composition.of.resources` and `Schooling` are the most significant variables with p-value < 0.5.
+* From the model we can interpret that `StatusDeveloping`, `Adult.Mortality`, `infant.deaths`, `Alcohol`, `HIV.AIDS`, and `thinness..1.19.years`  may have a negative effect on life expectancy.
+* From the model we can interpret that `Income.composition.of.resources` has a strong positive effect on life expectancy.
+* A peculiar result we can interpret from the model is that `Hepatitis.B90% Covered` and `Schooling` also have a negative effect on life expectancy.
 
 ## Model Selection
+
+We will now generate models by using different techniques like Forward Selection Method, Backward Elimination Method and Stepwise Selection Method.
 
 Build Model using Forward Selection Method.
 
 ```{r}
 ols_step_forward_p(lmod)
 ```
-
-Build Model using Backward Elimination Method.
-
-```{r}
-lmod_backward = ols_step_backward_p(lmod)
-lmod_backward
-```
-
-Build Model using Stepwise Selection Method.
-
-```{r}
-lmod_stepwise = ols_step_both_p(lmod)
-lmod_stepwise
-```
-
-Build Model using All Possible Regressions Method.
-
-```{r}
-#ols_step_all_possible(lmod, sbc = TRUE)
-```
-
-Model chosen by Forward Selection Method: `Schooling`, `HIV.AIDS`, `Adult.Mortality`, `Income.composition.of.resources`, `percentage.expenditure`, `BMI`, `Diphtheria`, `Alcohol`, `thinness..1.19.years`, `Status`, `Hepatitis.B`, `Total.expenditure`, `infant.deaths`, `Measles`, `Population`, `Polio`.\
-Model chosen by Backward Elimination Method: `StatusDeveloping`, `Adult.Mortality`, `infant.deaths`, `Alcohol`, `percentage.expenditure`, `HepatitisB90% Covered`, `Measles`, `BMI`, `Polio90% Covered`, `Total.expenditure`, `Diphtheria90% Covered`, `HIV.AIDS`, `Population`, `thinness..1.19.years`, `Income.composition.of.resources`, `Schooling`.\
-Model chosen by Stepwise Selection Method: `Schooling`, `HIV.AIDS`, `Adult.Mortality`, `Income.compsition.resources`, `percentage.expenditure`, `BMI`, `Diphtheria`, `Alcohol`, `thinness..1.19.years`, `Status`, `Hepatitis.B`.
 
 ```{r}
 lmod_forward = lm(
@@ -236,6 +204,11 @@ lmod_forward = lm(
 summary(lmod_forward)
 ```
 
+Build Model using Backward Elimination Method.
+
+```{r}
+ols_step_backward_p(lmod)
+```
 
 ```{r}
 lmod_backward = lm(
@@ -248,6 +221,11 @@ lmod_backward = lm(
 summary(lmod_backward)
 ```
 
+Build Model using Stepwise Selection Method.
+
+```{r}
+ols_step_both_p(lmod)
+```
 
 ```{r}
 lmod_stepwise = lm(
@@ -259,7 +237,45 @@ lmod_stepwise = lm(
 summary(lmod_stepwise)
 ```
 
-Adj. R-squared values of above models:
+Build Model using All Possible Regressions Method.
+
+```{r}
+# ols_step_all_possible(lmod, sbc = TRUE)
+```
+
+In summary, variables chosen by the methods:
+
+| Model Selection Method | `Status` | `Life.expectancy` | `Adult.Mortality` | `infant.deaths` |
+|-----------------------:|:--------:|:-----------------:|:-----------------:|:---------------:|
+| Forward Selection      |    x     |                   |         x         |        x        |
+| Backward Elimination   |    x     |         x         |         x         |        x        |
+| Stepwise Selection     |    x     |                   |         x         |                 |
+
+| Model Selection Method | `Alcohol` | `percentage.expenditure` | `Hepatitis.B` | `Measles` | `BMI` |
+|-----------------------:|:---------:|:------------------------:|:-------------:|:---------:|:-----:|
+| Forward Selection      |     x     |            x             |       x       |     x     |   x   |
+| Backward Elimination   |     x     |            x             |       x       |     x     |   x   |
+| Stepwise Selection     |     x     |            x             |       x       |           |   x   |
+
+| Model Selection Method | `Polio` | `Total.expenditure` | `Diphtheria` | `HIV.AIDS` | `GDP` |
+|-----------------------:|:-------:|:-------------------:|:------------:|:----------:|:-----:|
+| Forward Selection      |    x    |          x          |      x       |     x      |       |
+| Backward Elimination   |    x    |          x          |      x       |     x      |       |
+| Stepwise Selection     |         |                     |      x       |     x      |       |
+
+| Model Selection Method | `Population` | `thinness..1.19.years` | `thinness.5.9.years` |
+|-----------------------:|:------------:|:----------------------:|:--------------------:|
+| Forward Selection      |      x       |           x            |                      |
+| Backward Elimination   |      x       |           x            |                      |
+| Stepwise Selection     |              |           x            |                      |
+
+| Model Selection Method | `Income.compostition.of.resources` | `Schooling` |
+|-----------------------:|:----------------------------------:|:-----------:|
+| Forward Selection      |                 x                  |      x      |
+| Backward Elimination   |                 x                  |      x      |
+| Stepwise Selection     |                 x                  |      x      |
+
+Adj. R-squared values of the above models:
 
 ```{r}
 data.frame(
@@ -282,13 +298,15 @@ summary(lmod_final)
 
 ## Model Error Estimation
 
+We will now use our final model to see how well it performs in predicting the life expectancy of the human population.
+
 ```{r}
 result = predict(lmod_final, life)
 ```
 
 Mean Squared Error: 
 ```{r}
-mse = mean((life$Life.expectancy - result)^2)
+mse = mean((life$Life.expectancy - result) ^ 2)
 mse
 ```
 
@@ -296,6 +314,28 @@ Root Mean Squared Error:
 ```{r}
 rmse = sqrt(mse)
 rmse
+```
+
+Mean Absolute Error:
+```{r}
+n = length(result)
+sum = 0
+
+for (i in 1:n) {
+  sum = sum + abs(life$Life.expectancy[i] - result[i])
+}
+
+mae = sum / n
+mae
+```
+
+In summary,
+
+```{r}
+data.frame(
+  Method = c('MSE', 'RMSE', 'MAE'),
+  Result = c(mse, rmse, mae)
+)
 ```
 
 ## Model Adequacy Checking
@@ -308,10 +348,11 @@ hist(lmod_final$residuals, breaks = 20)
 
 Most of the residuals seem to be distributed in the center, indicating that they are distributed normally.
 
-
 ```{r}
 plot(lmod_final, which = c(1:6))
 ```
+
+There is no obvious observable pattern in the above plots, indicating that the model is appropriate.
 
 Multicollinearity Test:
 
