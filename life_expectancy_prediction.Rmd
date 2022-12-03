@@ -245,35 +245,37 @@ Build Model using All Possible Regressions Method.
 
 In summary, variables chosen by the methods:
 
-| Model Selection Method | `Status` | `Life.expectancy` | `Adult.Mortality` | `infant.deaths` |
-|-----------------------:|:--------:|:-----------------:|:-----------------:|:---------------:|
-| Forward Selection      |    x     |                   |         x         |        x        |
-| Backward Elimination   |    x     |         x         |         x         |        x        |
-| Stepwise Selection     |    x     |                   |         x         |                 |
+| Model Selection Method | `Status` | `Adult.Mortality` | `infant.deaths` | `Alcohol` |
+|-----------------------:|:--------:|:-----------------:|:---------------:|:---------:|
+| Forward Selection      |    x     |         x         |        x        |     x     |
+| Backward Elimination   |    x     |         x         |        x        |     x     |
+| Stepwise Selection     |    x     |         x         |                 |     x     |
 
-| Model Selection Method | `Alcohol` | `percentage.expenditure` | `Hepatitis.B` | `Measles` | `BMI` |
-|-----------------------:|:---------:|:------------------------:|:-------------:|:---------:|:-----:|
-| Forward Selection      |     x     |            x             |       x       |     x     |   x   |
-| Backward Elimination   |     x     |            x             |       x       |     x     |   x   |
-| Stepwise Selection     |     x     |            x             |       x       |           |   x   |
+| Model Selection Method | `percentage.expenditure` | `Hepatitis.B` | `Measles` | `BMI` | `Polio` |
+|-----------------------:|:------------------------:|:-------------:|:---------:|:-----:|:-------:|
+| Forward Selection      |            x             |       x       |     x     |   x   |    x    |
+| Backward Elimination   |            x             |       x       |     x     |   x   |    x    |
+| Stepwise Selection     |            x             |       x       |           |   x   |         |
 
-| Model Selection Method | `Polio` | `Total.expenditure` | `Diphtheria` | `HIV.AIDS` | `GDP` |
-|-----------------------:|:-------:|:-------------------:|:------------:|:----------:|:-----:|
-| Forward Selection      |    x    |          x          |      x       |     x      |       |
-| Backward Elimination   |    x    |          x          |      x       |     x      |       |
-| Stepwise Selection     |         |                     |      x       |     x      |       |
+| Model Selection Method | `Total.expenditure` | `Diphtheria` | `HIV.AIDS` | `GDP` | `Population` |
+|-----------------------:|:-------------------:|:------------:|:----------:|:-----:|:------------:|
+| Forward Selection      |          x          |      x       |     x      |       |      x       |
+| Backward Elimination   |          x          |      x       |     x      |       |      x       |
+| Stepwise Selection     |                     |      x       |     x      |       |              |
 
-| Model Selection Method | `Population` | `thinness..1.19.years` | `thinness.5.9.years` |
-|-----------------------:|:------------:|:----------------------:|:--------------------:|
-| Forward Selection      |      x       |           x            |                      |
-| Backward Elimination   |      x       |           x            |                      |
-| Stepwise Selection     |              |           x            |                      |
+| Model Selection Method | `thinness..1.19.years` | `thinness.5.9.years` |
+|-----------------------:|:----------------------:|:--------------------:|
+| Forward Selection      |           x            |                      |
+| Backward Elimination   |           x            |                      |
+| Stepwise Selection     |           x            |                      |
 
 | Model Selection Method | `Income.compostition.of.resources` | `Schooling` |
 |-----------------------:|:----------------------------------:|:-----------:|
 | Forward Selection      |                 x                  |      x      |
 | Backward Elimination   |                 x                  |      x      |
 | Stepwise Selection     |                 x                  |      x      |
+
+Both the Forward Selection method and Backward Elimination method have chosen the same variables.
 
 Adj. R-squared values of the above models:
 
