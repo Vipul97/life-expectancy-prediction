@@ -11,19 +11,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Abstract
 
-We have implemented a Linear Regression model to predict the life expectancy of the human population with our best model having an adjusted R-squared value of 0.8239, RMSE of 3.71, and MAE of 2.85, from the processed dataset having ~1650 observations  of ~20 variables  related to life expectancy and health factors for 193 countries provided by the Global Health Observatory (GHO) data repository under the World Health Organization (WHO). Several model building techniques including Forward Selection, Backward Elimination, and Stepwise Regression were used to obtain the candidate models, which were then evaluated with K-Fold Cross Validation to yield the model with the lowest RMSE value. Our best model passes the normality assumption and has no issues with the multicollinearity of the variables.
+We have implemented a Linear Regression model to predict the life expectancy of the human population with our best model having an adjusted R-squared value of 0.8239, RMSE of 3.71, and MAE of 2.85, from the processed dataset having ~1650 observations  of ~20 variables related to life expectancy and health factors for 193 countries provided by the Global Health Observatory (GHO) data repository under the World Health Organization (WHO). Several model building techniques including Forward Selection, Backward Elimination, and Stepwise Regression were used to obtain the candidate models, which were then evaluated with K-Fold Cross Validation to yield the model with the lowest RMSE value. Our best model passes the normality assumption and has no issues with the multicollinearity of the variables.
 
 # Introduction
 
 Life expectancy is an estimate of the expected average number of years of life (or a person's age at death) for individuals who were born into a particular population. It is one of the most used summary indicators for the overall health of a population. Its levels and trends direct health policies, and researchers try to identify the determining risk factors to assess and forecast future developments.
 
-The goal of this project is to build a Linear Regression model that can predict the life expectancy of the human population based on several factors such as the amount of alcohol consumption, average Body Mass Index (BMI), immunization of various vaccines among 1-year-olds such as Hepatitis B, Polio, and Diphtheria vaccines, and more, and also derive insights into what factors are significant in determining a higher or lower life expectancy of the human population.
+The goal of this project is to build a Linear Regression model that can predict the life expectancy of the human population based on several factors such as the average Body Mass Index (BMI), the Gross Domestic Product (GDP) of a country, the amount of alcohol consumption in a country, immunization of various vaccines among 1-year-olds such as Hepatitis B, Polio, and Diphtheria vaccines, and more, and also derive insights into what factors are significant in determining a higher or lower life expectancy of the human population.
 
 # Materials and Methods
 
 ## Software and Packages Used
 
-We have used R with the RStudio Integrated Development Environment for our analysis and for building the Linear Regression models. We have also used the R packages `corrplot`, `car`, `olsrr`, and `caret` to aid in our analysis and model building.
+We have used R with the RStudio Integrated Development Environment for our analysis and for building the Linear Regression models. We have also used the R packages `corrplot`, `ggplot`, `car`, `olsrr`, and `caret` to aid in our analysis and model building.
 
 ## Dataset
 
@@ -33,6 +33,7 @@ The dataset is available at https://www.kaggle.com/datasets/kumarajarshi/life-ex
 
 ```{r, include=FALSE}
 library(corrplot)
+library(ggplot2)
 library(car)
 library(olsrr)
 library(caret)
@@ -111,9 +112,9 @@ summary(life)
 
 ## Correlations
 
-We would want to look at the correlation matrix to see which variables are correlated with the target variable, and also to check if any independent variable is also correlated with another independent variable. Correlated independent variables in a model can negatively impact its performance, and so if any such pair of independent correlated variables is found, we would keep only one of them in the model.
+We would want to look at the correlation matrix to see what variables are correlated with the target variable, and also to check if any independent variable is also correlated with another independent variable. Correlated independent variables in a model can negatively impact its performance, and so if any such pair of independent correlated variables is found, we would keep only one of them in the model.
 
-Since the number of variables is moderately large, we have plotted the correlation plot of the dataset rather than printing the correlation matrix by itself. The colors and their shades easily guide us to show which 2 variables are correlated.
+Since the number of variables is moderately large, we have plotted the correlation plot of the dataset rather than printing the correlation matrix by itself. The colors and their shades easily guide us to show what 2 variables are correlated.
 
 ```{r, echo=FALSE}
 life_nums = unlist(lapply(life, is.numeric), use.names = FALSE)
@@ -145,6 +146,37 @@ life = life[, !(
 
 \newpage
 
+It is evident from the scatterplot of `Life.expectancy` against `Income.composition.of.resources` and `Life.expectancy` against `Schooling` that there is a positive trend in the life expectancy of the human population with the increase in the values of these independent variables.
+
+```{r, echo=FALSE}
+ggplot(data = life,
+       aes(x = Income.composition.of.resources, y = Life.expectancy)) + geom_point() + geom_smooth(formula = y ~ x, method = 'lm')
+ggplot(data = life, aes(x = Schooling, y = Life.expectancy)) + geom_point() +
+  geom_smooth(formula = y ~ x, method = 'lm')
+```
+
+\newpage
+
+It is evident from the scatterplot of `Life.expectancy` against `Adult.Mortality` that there is a negative trend in the life expectancy of the human population with the increase in the value of this independent variable.
+
+```{r, echo=FALSE}
+ggplot(data = life, aes(x = Adult.Mortality, y = Life.expectancy)) + geom_point() +
+  geom_smooth(formula = y ~ x, method = 'lm')
+```
+
+\newpage
+
+It seems in the scatterplot of `Life.expectancy` against `Measles` and `Life.expectancy` against `Population` that there is a negative trend in the life expectancy of the human population with the increase in the values of these independent variables, but since the bulk of the data falls on the lower range of their values, there exist some high leverage and high influence points that appear to drive the regression line downward toward the negative. This is clearly evident in  the scatterplot of `Life.expectancy` against `Population`.
+
+```{r, echo=FALSE}
+ggplot(data = life, aes(x = Measles, y = Life.expectancy)) + geom_point() +
+  geom_smooth(formula = y ~ x, method = 'lm')
+ggplot(data = life, aes(x = Population, y = Life.expectancy)) + geom_point() +
+  geom_smooth(formula = y ~ x, method = 'lm')
+```
+
+\newpage
+
 ## Model Building
 
 We now build a Linear Regression Model using all the remaining variables to predict the life expectancy of the human population. We will set the level of $\alpha$ to be 0.05 throughout the analysis.
@@ -167,7 +199,7 @@ We now generate models by using different techniques like Forward Selection Meth
 
 ### Forward Selection Method
 
-The Forward Selection method involves building a model starting with no variables in the model, testing the addition of each variable using a chosen model fit criterion (in our case the p-to-enter value), adding the variable (if any) whose inclusion gives the most statistically significant improvement of the fit, and repeating this process until none improves the model to a statistically significant extent.
+The Forward Selection method involves building a model starting with no variables in the model, testing the addition of each variable using a chosen model fit criterion, adding the variable (if any) whose inclusion gives the most statistically significant improvement of the fit, and repeating this process until none improves the model to a statistically significant extent.
 
 For building the model using Forward Selection method, we have used the default p-to-enter value of 0.3.
 
@@ -179,7 +211,7 @@ The Forward Selection method included all the variables in the model.
 
 ### Backward Elimination Method
 
-The Backward Elimination method involves building a model starting with all candidate variables, testing the deletion of each variable using a chosen model fit criterion (in our case the p-to-remove value), deleting the variable (if any) whose loss gives the most statistically insignificant deterioration of the model fit, and repeating this process until no further variables can be deleted without a statistically significant loss of fit.
+The Backward Elimination method involves building a model starting with all candidate variables, testing the deletion of each variable using a chosen model fit criterion, deleting the variable (if any) whose loss gives the most statistically insignificant deterioration of the model fit, and repeating this process until no further variables can be deleted without a statistically significant loss of fit.
 
 For building the model using Backward Elimination method, we have used the default p-to-remove value of 0.3.
 
@@ -205,7 +237,7 @@ A total of 12 variables were included in the model built using Stepwise Regressi
 
 \newpage
 
-In summary, the variables chosen by the methods are indicated in the following table (x denotes the variable was chosen by the method):
+In summary, the variables chosen by the methods are indicated in the following table (x denotes the variable was chosen by the corresponding method):
 
 | Model Selection Method | `Status` | `Adult.Mortality` | `infant.deaths` | `Alcohol` |
 |-----------------------:|:--------:|:-----------------:|:---------------:|:---------:|
@@ -235,7 +267,7 @@ Both the Forward Selection method and Backward Elimination method have chosen th
 
 ### K-Fold Cross Validation
 
-We were left with 2 models - the full model and the model built using Stepwise Regression method - as our candidate models. To choose the better model as our final model, we ran K-Fold Cross Validation on each of the above models, and subsequently picked the model with the lowest RMSE value as our final model. We chose the value of K to be 5.
+We were left with 2 models - the full model and the model built using Stepwise Regression method - as our candidate models. To find out which model is the better one to pick as our final model, we ran K-Fold Cross Validation on both models and subsequently picked the model with the lowest mean RMSE value as our final model. We chose the value of K to be 5.
 
 In K-Fold Cross-Validation, the original sample of the dataset is randomly partitioned into K equal sized subsamples. Of the K subsamples, a single subsample is retained as the validation data for testing the model, and the remaining K-1 subsamples are used as training data. The cross-validation process is then repeated K times, with each of the K subsamples used exactly once as the validation data. The K results are then averaged to produce a single estimation, which in our case is the mean RMSE value.
 
@@ -291,7 +323,7 @@ Since the model chosen by Stepwise Regression method `lmod_stepwise` has a lower
 
 # Results
 
-Out of the 2 candidate models, we have picked the model chosen by the Stepwise Regression model to be our final model. 
+Out of the 2 candidate models, we have picked the model chosen by the Stepwise Regression method to be our final model. This decision was based on the fact that the Stepwise Regression model had the lowest mean RMSE value when evaluated with K-Fold Cross Validation (K = 5).
 
 ```{r}
 lmod_final = lm(
@@ -318,7 +350,7 @@ There are a few takeaways from this final model:
 
 We have primarily used the R-squared, the adjusted R-squared, the root-mean-square error (RMSE), and the mean absolute error (MAE) as the metric for evaluating our models.
 
-The estimates for the final model are derived from the results of 5-Fold Cross Validation, and are summarized in the following table:
+The estimates for the final model are derived from the results of K-Fold Cross Validation (K = 5), and are summarized in the following table:
 
 |  Metric   | Estimate  |
 |----------:|:---------:|
@@ -328,7 +360,15 @@ The estimates for the final model are derived from the results of 5-Fold Cross V
 
 ## Model Adequacy Checking
 
-Normality Testing:
+To make sure our final model behaves as expected in terms of prediction and inference, we need to test that the assumptions made in building the Linear Regression model are not broken. These assumptions are:
+
+1. The relationship between the response $y$ and the regressors is linear, at least approximately.
+2. The error term $\epsilon$ has zero mean.
+3. The error term $\epsilon$ has constant variance $\sigma^2$.
+4. The errors are uncorrelated.
+5. The errors are normally distributed.
+
+We will be testing these assumptions by checking whether the residuals of the model are normally distributed, whether the plot of the residuals against the fitted values show any pattern, and whether there are any anomalies in the Q-Q plot.
 
 ```{r, echo=FALSE}
 hist(lmod_final$residuals)
@@ -337,12 +377,12 @@ hist(lmod_final$residuals)
 Most of the residuals seem to be distributed in the center, indicating that they are distributed normally.
 
 ```{r, echo=FALSE}
-plot(lmod_final, which = c(1:5))
+plot(lmod_final, which = c(1:2))
 ```
 
-There is no obvious observable pattern in the above plots, indicating that the model is appropriate.
+There is no obvious observable pattern in the above plots, and so we conclude that our final model is appropriate.
 
-Finally, we run a multicollinearity test to see if there is any multicollinearity between the variables in the model. We have used the Variance Inflation Factor (VIF) to determine the multicollinearity between the variables.
+We also run a multicollinearity test to see if there is any multicollinearity between the variables in the model. We have used the Variance Inflation Factor (VIF) to determine the multicollinearity between the variables.
 
 ```{r}
 vif(lmod_final)
@@ -355,9 +395,23 @@ Since the VIF for all of the predictors is less than 10, there seems to be no is
 
 # Discussion
 
+We have implemented a Linear Regression model that predicts the life expectancy of the human population using 12 variables related to life expectancy and health factors. We have shown that several of these variables have some correlations with the dependent variable suggesting that fitting a Linear Regression model to this dataset would be tractable. Our model also passes the normality assumption and has no issues with the multicollinearity of the variables.
+
+While all the variables in our model are significant, the inferences made from this model should be taken with a grain of salt - we do not believe that an increase in Hepatitis B (HepB) immunization coverage among 1-year-olds should be associated with a declining life expectancy in a country. This calls for further investigation.
+
+We had planned to include the Best Subsets Regression method and the All Possible Regressions method for building our candidate models, but since the computational time for running these methods was too high on our machines, we have omitted these methods in our analysis.
+
+Due to the limited amount of time for this analysis, we have not explored working with Polynomial Regression and including interaction terms in our models. We believe that in particular, a squared term for `BMI` in the model would be appropriate since it is well-known that too low or too high of a BMI poses health risks for individuals. It is also possible to convert this numerical variable into categorical values, for example, 'Underweight' for BMI < 18.5, 'Healthy' for 18.5 $\le$ BMI < 25, 'Overweight' 25 $\le$ BMI < 30, and 'Obese' for BMI > 30.
+
+We are curious to know how our model compares to other regression techniques such as KNN Regression, Support Vector Regression, Decision Tree Regression, and even Randon Forest Regression. We have left this for future work. 
+
+Though we believe that the variables we have in our dataset are relevant in predicting the life expectancy of the human population, we think that having more relevant variables like sex, exercise, smoking, and environment pollution would be even more helpful for prediction and inference. It also almost never harms in collecting more observations of data related to life expectancy and health factors for building our model.
+
 # Literature Cited
 
-`[1]` Luy M, Di Giulio P, Di Lego V, Lazarevič P, Sauerberg M. Life Expectancy: Frequently Used, but Hardly Understood. Gerontology. 2020;66(1):95-104. doi: 10.1159/000500955. Epub 2019 Aug 7. PMID: 31390630; PMCID: PMC7026938.
+`[1]` Douglas C. Montgomery, Elizabeth A. Peck, G. Geoffrey Vining: Introduction to Linear Regression Analysis.
+
+`[2]` Luy M, Di Giulio P, Di Lego V, Lazarevič P, Sauerberg M. Life Expectancy: Frequently Used, but Hardly Understood. Gerontology. 2020;66(1):95-104. doi: 10.1159/000500955. Epub 2019 Aug 7. PMID: 31390630; PMCID: PMC7026938.
 
 \newpage
 
