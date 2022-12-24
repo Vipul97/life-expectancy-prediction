@@ -131,7 +131,7 @@ corrplot(
 There are a few takeaways from this correlation plot:
 
 * `Life.expectancy` has a strong positive correlation with `Income.composition.of.resources` and `Schooling`.
-* `Life.expectancy` has a negative correlation with `Adult.Mortality`, which makes sense since if the mortality rate of adult is high, then obviously the life expectancy will be low.
+* `Life.expectancy` has a negative correlation with `Adult.Mortality`, which makes sense since if the adult mortality rate is high, then obviously the life expectancy will be low.
 * `Life.expectancy` has a very weak correlation with `Measles` and `Population`.
 * There is a very strong correlation between `infant.deaths` and `under.five.deaths`, `percentage.expenditure` and `GDP`, and `thinness..1.19.years` and `thinness.5.9.years`, indicating multicollinearity between them. Therefore, we have removed `under.five.deaths`, `percentage.expenditure`, and `thinness.5.9.years` for building the model.
 
@@ -196,7 +196,7 @@ There are a few takeaways from this full model:
 * From the model we can interpret that `StatusDeveloping`, `Adult.Mortality`, `infant.deaths`, `Alcohol`, `HIV.AIDS`, and `thinness..1.19.years`  may have a negative effect on life expectancy.
 * A peculiar result we can interpret from the model is that `Hepatitis.B>=90% Covered` may also have a negative effect on life expectancy.
 
-We now generate models by using different techniques like Forward Selection Method, Backward Elimination Method and Stepwise Regression Method.
+We now generate models by using different techniques like Forward Selection method, Backward Elimination method and Stepwise Regression method.
 
 ### Forward Selection Method
 
@@ -268,7 +268,7 @@ Both the Forward Selection method and Backward Elimination method have chosen th
 
 ### K-Fold Cross Validation
 
-We were left with 2 models - the full model and the model built using Stepwise Regression method - as our candidate models. To find out which model is the better one to pick as our final model, we ran K-Fold Cross Validation on both models and subsequently picked the model with the lowest mean RMSE value as our final model. We chose the value of K to be 5.
+We are left with 2 models - the full model and the model built using Stepwise Regression method - as our candidate models. To find out which model is the better one to pick as our final model, we ran K-Fold Cross Validation on both models and subsequently picked the model with the lowest mean RMSE value as our final model. We chose the value of K to be 5.
 
 In K-Fold Cross-Validation, the original sample of the dataset is randomly partitioned into K equal sized subsamples. Of the K subsamples, a single subsample is retained as the validation data for testing the model, and the remaining K-1 subsamples are used as training data. The cross-validation process is then repeated K times, with each of the K subsamples used exactly once as the validation data. The K results are then averaged to produce a single estimation, which in our case is the mean RMSE value.
 
@@ -314,7 +314,7 @@ CV_stepwise = train(
 CV_stepwise
 ```
 
-Results of 5-Fold Cross-Validation of the 2 models:
+Results of 5-Fold Cross-Validation on the 2 models:
 
 ```{r}
 rbind(CV_all$results, CV_stepwise$results)
@@ -334,7 +334,7 @@ lmod_final = lm(
 summary(lmod_final)
 ```
 
-The final model contains 12 variables: `Schooling`, `HIV.AIDS`, `Adult.Mortality`, `Income.composition.of.resources`, `BMI`, `GDP`, `Diphtheria`, `Alcohol`, `thinness..1.19.years`, `Status`, `Hepatitis.B`, and `Total.expenditure`.
+The final model contains 12 variables: `Schooling`, `HIV.AIDS`, `Adult.Mortality`, `Income.composition.of.resources`, `BMI`, `GDP`, `Diphtheria>=90% Covered`, `Alcohol`, `thinness..1.19.years`, `Status`, `Hepatitis.B>=90% Covered`, and `Total.expenditure`.
 
 \newpage
 
@@ -361,7 +361,7 @@ The estimates for the final model are derived from the results of K-Fold Cross V
 
 ## Model Adequacy Checking
 
-To make sure our final model behaves as expected in terms of prediction and inference, we need to test that the assumptions made in building the Linear Regression model are not broken. These assumptions are:
+To make sure our final model behaves as expected in terms of inference and prediction, we need to test that the assumptions made in building the Linear Regression model are not broken. These assumptions are:
 
 1. The relationship between the response $y$ and the regressors is linear, at least approximately.
 2. The error term $\epsilon$ has zero mean.
@@ -396,17 +396,17 @@ Since the VIF for all of the predictors is less than 10, there seems to be no is
 
 # Discussion
 
-We have implemented a Linear Regression model that predicts the life expectancy of the human population using 12 variables related to life expectancy and health factors. We have shown that several of these variables have some correlations with the dependent variable suggesting that fitting a Linear Regression model to this dataset would be tractable. Our model also passes the normality assumption and has no issues with the multicollinearity of the variables.
+We have implemented a Linear Regression model that predicts the life expectancy of the human population using 12 variables related to life expectancy and health factors. We have shown that several of these independent variables have some correlations with life expectancy, suggesting that fitting a Linear Regression model to this dataset would be appropriate. Our model also passes the normality assumption and has no issues with the multicollinearity of the variables.
 
-While all the variables in our model are significant, the inferences made from this model should be taken with a grain of salt - we do not believe that an increase in Hepatitis B (HepB) immunization coverage among 1-year-olds should be associated with a declining life expectancy in a country. This calls for further investigation.
+While all the independent variables in our model are significant, the inferences made from this model should be taken with a grain of salt - we do not believe that an increase in Hepatitis B (HepB) immunization coverage among 1-year-olds should be associated with a declining life expectancy in a country. This calls for further investigation.
 
-We had planned to include the Best Subsets Regression method and the All Possible Regressions method for building our candidate models, but since the computational time for running these methods was too high on our machines, we have omitted these methods in our analysis.
+We had planned to include the All Possible Regressions method and the Best Subsets Regression method for building our candidate models, but since the computational time for running these methods was too high on our machines, we have omitted these methods in our analysis.
 
-Due to the limited amount of time for this analysis, we have not explored working with Polynomial Regression and including interaction terms in our models. We believe that in particular, a squared term for `BMI` in the model would be appropriate since it is well-known that too low or too high of a BMI poses health risks for individuals. It is also possible to convert this numerical variable into categorical values, for example, 'Underweight' for BMI < 18.5, 'Healthy' for 18.5 $\le$ BMI < 25, 'Overweight' 25 $\le$ BMI < 30, and 'Obese' for BMI > 30.
+Due to the limited amount of time for this analysis, we have not explored working with Polynomial Regression and including interaction terms in our models. We believe that in particular, a squared term for `BMI` in the model would be appropriate since it is well-known that too low or too high of a BMI poses health risks for individuals. It is also possible to convert this numerical variable into categorical values, for example, 'Underweight' for BMI < 18.5, 'Healthy' for 18.5 $\le$ BMI < 25, 'Overweight' 25 $\le$ BMI < 30, and 'Obese' for BMI $\ge$ 30.
 
-We are curious to know how our model compares to other regression techniques such as KNN Regression, Support Vector Regression, Decision Tree Regression, and even Randon Forest Regression. We have left this for future work. 
+We are curious to know how our model compares to other regression techniques such as KNN Regression, Support Vector Regression, Decision Tree Regression, and also Random Forest Regression. We have left this for future work. 
 
-Though we believe that the variables we have in our dataset are relevant in predicting the life expectancy of the human population, we think that having more relevant variables like sex, exercise, smoking, and environment pollution would be even more helpful for prediction and inference. It also almost never harms in collecting more observations of data related to life expectancy and health factors for building our model.
+Though we believe that the variables we have in our dataset are relevant in predicting the life expectancy of the human population, we think that having more relevant variables like sex, exercise, smoking, and environment pollution would be even more helpful for inference and prediction. It is also always beneficial to collect more observations of data related to life expectancy and health factors for building our model.
 
 # Literature Cited
 
