@@ -33,9 +33,9 @@ The dataset is available at https://www.kaggle.com/datasets/kumarajarshi/life-ex
 + `Income.composition.of.resources` - Human Development Index in terms of income composition of resources (index ranging from 0 to 1).
 + `Schooling` - Number of years of Schooling (years).
 
-### Correlation Plot
+### Plot of Life Expectancy against Schooling
 
-![Correlation Plot](correlation.png)
+![Plot of Life Expectancy against Schooling](life_expectancy_schooling.png)
 
 ## Results
 
