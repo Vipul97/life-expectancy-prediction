@@ -3,6 +3,7 @@ title: "Life Expectancy Prediction"
 author: Vipul Gharde, Chaitanya Bachhav
 output: pdf_document
 date: "2022-12-05"
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -15,7 +16,7 @@ We have implemented a Linear Regression model to predict the life expectancy of 
 
 # Introduction
 
-Life expectancy is an estimate of the expected average number of years of life (or a person's age at death) for individuals who were born into a particular population. It is one of the most used summary indicators for the overall health of a population. Its levels and trends direct health policies, and researchers try to identify the determining risk factors to assess and forecast future developments.
+Life expectancy is an estimate of the expected average number of years of life (or a person's age at death) for individuals who were born into a particular population. It is one of the most used summary indicators for the overall health of a population. Its levels and trends direct health policies, and researchers try to identify the determining risk factors to assess and forecast future developments. [@luy2020life]
 
 The goal of this project is to build a Linear Regression model that can predict the life expectancy of the human population based on several factors such as the average Body Mass Index (BMI), the Gross Domestic Product (GDP) of a country, the amount of alcohol consumption in a country, immunization of various vaccines among 1-year-olds such as Hepatitis B, Polio, and Diphtheria vaccines, and more, and also derive insights into what factors are significant in determining a higher or lower life expectancy of the human population.
 
@@ -366,7 +367,7 @@ To make sure our final model behaves as expected in terms of prediction and infe
 2. The error term $\epsilon$ has zero mean.
 3. The error term $\epsilon$ has constant variance $\sigma^2$.
 4. The errors are uncorrelated.
-5. The errors are normally distributed.
+5. The errors are normally distributed. [@montgomery2021introduction]
 
 We will be testing these assumptions by checking whether the residuals of the model are normally distributed, whether the plot of the residuals against the fitted values show any pattern, and whether there are any anomalies in the Q-Q plot.
 
@@ -409,9 +410,7 @@ Though we believe that the variables we have in our dataset are relevant in pred
 
 # Literature Cited
 
-`[1]` Douglas C. Montgomery, Elizabeth A. Peck, G. Geoffrey Vining: Introduction to Linear Regression Analysis.
-
-`[2]` Luy M, Di Giulio P, Di Lego V, Lazarevič P, Sauerberg M. Life Expectancy: Frequently Used, but Hardly Understood. Gerontology. 2020;66(1):95-104. doi: 10.1159/000500955. Epub 2019 Aug 7. PMID: 31390630; PMCID: PMC7026938.
+<div id="refs"></div>
 
 \newpage
 
